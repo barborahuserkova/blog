@@ -15,7 +15,7 @@ from flask_gravatar import Gravatar
 
 import os
 
-SECRET_KEY= os.getenv("S_KEY")
+SECRET_KEY= os.environ.get("S_KEY")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 ckeditor = CKEditor(app)
@@ -25,7 +25,7 @@ login_manager.init_app(app)
 Base = declarative_base()
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///blog.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
