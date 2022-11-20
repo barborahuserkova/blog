@@ -14,6 +14,7 @@ from forms import CreatePostForm, RegisterUser, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 
 import os
+import smtplib
 
 SECRET_KEY= os.environ.get("S_KEY")
 app = Flask(__name__)
@@ -23,6 +24,20 @@ Bootstrap(app)
 login_manager= LoginManager()
 login_manager.init_app(app)
 Base = declarative_base()
+
+##SMTP
+M_PASSWORD = os.environ.get("MAIL_PASS")
+FROM_MAIL = os.environ.get("FROM_MAIL")
+connection_url = "smtp.centrum.sk"
+TO_MAIL= os.environ.get("TO_MAIL")
+
+def send_email(message, subject):
+    connection= smtplib.SMTP(connection_url)
+    connection.starttls()
+    connection.login(user=FROM_MAIL, password=M_PASSWORD)
+    connection.sendmail(from_addr=FROM_MAIL, to_addrs=TO_MAIL, msg=f"Subject:{subject}\n\n{message}")
+    connection.close()
+
 
 ##CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///blog.db")
@@ -121,6 +136,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user)
+        send_email(subject='NEW USER', message=f"User name:{new_user.name}, User email:{new_user.email}, User ID:{new_user.id}")
         return redirect(url_for('get_all_posts'))
     else:
         return render_template("register.html", form=form)
@@ -168,6 +184,7 @@ def show_post(post_id):
             )
             db.session.add(new_comment)
             db.session.commit()
+            send_email(subject='NEW COMMENT', message=f"User:{new_comment.comment_author}, comment:{new_comment.body}")
             return redirect(url_for('show_post', post_id=post_id))
     return render_template("post.html", post=requested_post, form=form)
 
